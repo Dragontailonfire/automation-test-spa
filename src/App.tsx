@@ -1,6 +1,7 @@
 import { useState, useEffect } from "preact/hooks";
 import { TabContainer } from "./components/TabContainer";
 import { Item } from "./types";
+import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 
 const generateData = (count: number, prefix: string): Item[] => {
@@ -11,6 +12,7 @@ const generateData = (count: number, prefix: string): Item[] => {
   }));
 };
 
+inject();
 injectSpeedInsights();
 
 export function App() {
