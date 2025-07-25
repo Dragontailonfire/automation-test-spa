@@ -10,19 +10,23 @@ export function IFrameHeader1() {
     <div class="frame-header">
       <h2 data-testid="iframe-title">Challenge 1</h2>
       <div role="list" aria-label="Items in frame 1">
-        <div class="frame-item" data-item-id="frame1-1">
-          Item 1
-        </div>
-        <div class="frame-item" data-item-id="frame1-2">
-          Item 2
-        </div>
-        <button
-          type="button"
-          aria-label="Action button in frame 1"
-          onClick={handleValidation}
-        >
-          Click Me
-        </button>
+        <ul>
+          <li class="frame-item" data-item-id="frame1-1">
+            Item 1
+          </li>
+          <li class="frame-item" data-item-id="frame1-2">
+            Item 2
+          </li>
+        </ul>
+        <p>
+          <button
+            type="button"
+            aria-label="Action button in frame 1"
+            onClick={handleValidation}
+          >
+            Click Me
+          </button>
+        </p>
       </div>
     </div>
   );

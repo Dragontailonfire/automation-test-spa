@@ -21,7 +21,7 @@ export function IFrameWrapper({ id, title, children }: IFrameProps) {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
               padding: 20px; 
               margin: 0;
-              background: ${id === "test-iframe-2" ? "#f0f0f0" : "white"};
+              background: "#f0f0f0";
               display: flex;
               flex-direction: column;
               min-height: 100vh;
