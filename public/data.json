@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "created": "2024-01-01",
+    "description": "Mock data for automation testing challenge"
+  },
+  "sampleData": {
+    "users": [
+      { "id": 1, "name": "Test User 1", "role": "admin" },
+      { "id": 2, "name": "Test User 2", "role": "user" },
+      { "id": 3, "name": "Test User 3", "role": "guest" }
+    ],
+    "config": {
+      "itemsPerPage": 50,
+      "maxItems": 10000,
+      "enableDragDrop": true,
+      "enableVirtualScroll": true
+    }
+  }
+}
