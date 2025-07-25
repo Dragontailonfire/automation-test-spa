@@ -1,6 +1,7 @@
 import { useState, useEffect } from "preact/hooks";
 import { TabContainer } from "./components/TabContainer";
 import { Item } from "./types";
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
 const generateData = (count: number, prefix: string): Item[] => {
   return Array.from({ length: count }, (_, i) => ({
@@ -9,6 +10,8 @@ const generateData = (count: number, prefix: string): Item[] => {
     value: Math.floor(Math.random() * 1000),
   }));
 };
+
+injectSpeedInsights();
 
 export function App() {
   const [verticalData, setVerticalData] = useState<Item[]>([]);

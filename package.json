@@ -15,6 +15,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.13.1",
   "dependencies": {
+    "@vercel/speed-insights": "^1.2.0",
     "htm": "^3.1.1",
     "preact": "^10.26.9",
     "react-list": "^0.8.18",
