@@ -5,9 +5,10 @@ export interface Item {
 }
 
 export interface ListProps {
-  data: Item[];
   orientation: "vertical" | "horizontal";
   testId: string;
+  // number of items to show in the viewport
+  visibleRange?: number;
 }
 
 export interface DragDropProps {
@@ -18,8 +19,6 @@ export interface DragDropProps {
 }
 
 export interface TabProps {
-  verticalData: Item[];
-  horizontalData: Item[];
   dragListA: Item[];
   dragListB: Item[];
   onDragListAChange: (items: Item[]) => void;
@@ -30,4 +29,21 @@ export interface IFrameProps {
   id: string;
   title: string;
   children: preact.ComponentChildren;
+}
+
+export interface ListConfig {
+  total: number;
+  visibleRange: number;
+  prefix: string;
+}
+
+export interface Config {
+  tabs: {
+    showVertical: boolean;
+    showHorizontal: boolean;
+  };
+  lists: {
+    vertical: ListConfig;
+    horizontal: ListConfig;
+  };
 }

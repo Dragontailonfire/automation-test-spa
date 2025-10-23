@@ -1,32 +1,29 @@
-import { useState, useEffect } from "preact/hooks";
+import { useState } from "preact/hooks";
 import { TabContainer } from "./components/TabContainer";
+import { ConfigPage } from "./components/ConfigPage";
 import { Item } from "./types";
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 
-const generateData = (count: number, prefix: string): Item[] => {
-  return Array.from({ length: count }, (_, i) => ({
-    id: `${prefix}-${i}`,
-    text: `${prefix} Item ${i}`,
+const initialDragLists: Record<string, Item[]> = {
+  listA: Array.from({ length: 20 }, (_, i) => ({
+    id: `Drag-A-${i}`,
+    text: `Drag-A Item ${i}`,
     value: Math.floor(Math.random() * 1000),
-  }));
+  })),
+  listB: Array.from({ length: 20 }, (_, i) => ({
+    id: `Drag-B-${i}`,
+    text: `Drag-B Item ${i}`,
+    value: Math.floor(Math.random() * 1000),
+  }))
 };
 
 inject();
 injectSpeedInsights();
 
 export function App() {
-  const [verticalData, setVerticalData] = useState<Item[]>([]);
-  const [horizontalData, setHorizontalData] = useState<Item[]>([]);
-  const [dragListA, setDragListA] = useState<Item[]>([]);
-  const [dragListB, setDragListB] = useState<Item[]>([]);
-
-  useEffect(() => {
-    setVerticalData(generateData(10000, "Vertical"));
-    setHorizontalData(generateData(10000, "Horizontal"));
-    setDragListA(generateData(20, "Drag-A"));
-    setDragListB(generateData(20, "Drag-B"));
-  }, []);
+  const [dragListA, setDragListA] = useState<Item[]>(initialDragLists.listA);
+  const [dragListB, setDragListB] = useState<Item[]>(initialDragLists.listB);
 
   return (
     <div class="app-container" role="application">
@@ -35,14 +32,16 @@ export function App() {
       </header>
 
       <main class="main-content">
-        <TabContainer
-          verticalData={verticalData}
-          horizontalData={horizontalData}
-          dragListA={dragListA}
-          dragListB={dragListB}
-          onDragListAChange={setDragListA}
-          onDragListBChange={setDragListB}
-        />
+        {location.pathname === "/config" ? (
+          <ConfigPage />
+        ) : (
+          <TabContainer
+            dragListA={dragListA}
+            dragListB={dragListB}
+            onDragListAChange={setDragListA}
+            onDragListBChange={setDragListB}
+          />
+        )}
       </main>
 
       <footer class="footer">

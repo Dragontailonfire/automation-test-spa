@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useState, useEffect } from "preact/hooks";
 import { TabProps } from "../types";
 import { VirtualList } from "./VirtualList";
 import { DragDropList } from "./DragDropList";
@@ -12,14 +12,33 @@ interface Tab {
 }
 
 export function TabContainer({
-  verticalData,
-  horizontalData,
   dragListA,
   dragListB,
   onDragListAChange,
   onDragListBChange,
 }: TabProps) {
   const [activeTab, setActiveTab] = useState<string>("iframe1");
+
+  const [config, setConfig] = useState<any>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchConfig = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${apiUrl}/api/config`);
+        const data = await response.json();
+        if (mounted) setConfig(data);
+      } catch (error) {
+        console.error('Failed to fetch config:', error);
+      }
+    };
+
+    fetchConfig();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const tabs: Tab[] = [
     {
@@ -53,16 +72,20 @@ export function TabContainer({
             .load-more-button:hover { background: #2980b9; }
           `}</style>
           <IFrameHeader1 />
-          <VirtualList
-            data={verticalData}
-            orientation="vertical"
-            testId="vertical-scroll-list"
-          />
-          <VirtualList
-            data={horizontalData}
-            orientation="horizontal"
-            testId="horizontal-scroll-list"
-          />
+          {config?.tabs?.showVertical && (
+            <VirtualList
+              orientation="vertical"
+              testId="vertical-scroll-list"
+              visibleRange={config?.lists?.vertical?.visibleRange}
+            />
+          )}
+          {config?.tabs?.showHorizontal && (
+            <VirtualList
+              orientation="horizontal"
+              testId="horizontal-scroll-list"
+              visibleRange={config?.lists?.horizontal?.visibleRange}
+            />
+          )}
         </>
       </IFrameWrapper>
     ),
@@ -108,6 +131,9 @@ export function TabContainer({
             {tab.label}
           </button>
         ))}
+        <a href="/config" class="tab-button" style={{ marginLeft: "auto" }}>
+          Config
+        </a>
       </nav>
 
       <div

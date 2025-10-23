@@ -1,27 +1,47 @@
 import { useState, useRef, useCallback, useEffect } from "preact/hooks";
 import ReactList from "react-list";
 import { ListProps } from "../types";
+import { Loader } from "./Loader";
 
 interface VisibleRange {
   start: number;
   end: number;
 }
 
-export function VirtualList({ data, orientation, testId }: ListProps) {
-  const [visibleRange, setVisibleRange] = useState<VisibleRange>({
-    start: 0,
-    end: 10,
-  });
+interface ApiResponse {
+  items: any[];
+  start: number;
+  end: number;
+  total: number;
+  visibleRange: number;
+}
+
+export function VirtualList({ orientation, testId, visibleRange: configVisibleRange }: ListProps) {
+  const [visibleRange, setVisibleRange] = useState<VisibleRange>({ start: 0, end: 10 });
+  const [totalCount, setTotalCount] = useState<number>(0);
   const listRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isHorizontal = orientation === "horizontal";
+  const listType = isHorizontal ? "horizontal" : "vertical";
+
+  // item cache when using API-backed lists: null means not loaded yet
+  const [itemsCache, setItemsCache] = useState<(any | null)[]>([]);
+
   const [loading, setLoading] = useState(false);
-  const refreshIdRef = useRef(0);
+  const [fetchId, setFetchId] = useState(0);
 
   const renderItem = useCallback(
     (index: number, key: string | number) => {
-      const item = data[index];
-      if (!item) return null;
+      const item = itemsCache[index];
+      if (!item) {
+        return (
+          <div key={key} class="list-item placeholder" data-testid={`${testId}-item-${index}`} data-item-index={index}>
+            <div class="item-content">
+              <span class="item-text">Loading...</span>
+            </div>
+          </div>
+        );
+      }
 
       const hasGoodLocator = index % 3 !== 0;
 
@@ -40,7 +60,7 @@ export function VirtualList({ data, orientation, testId }: ListProps) {
         </div>
       );
     },
-    [data, testId]
+    [itemsCache, testId]
   );
 
   const handleScroll = useCallback(() => {
@@ -48,38 +68,55 @@ export function VirtualList({ data, orientation, testId }: ListProps) {
       const indices = listRef.current.getVisibleRange();
       if (indices) {
         setVisibleRange({ start: indices[0], end: indices[1] });
-        // increment refresh id to trigger simulated API load for this "page"/range
-        refreshIdRef.current += 1;
+        // trigger fetch for the visible range
+        setFetchId((id) => id + 1);
       }
     }
   }, []);
 
-  // whenever refreshIdRef changes, simulate a random 2-5s delay
+  // fetch items from API when visibleRange changes
   useEffect(() => {
     let mounted = true;
-    const currentId = refreshIdRef.current;
+    const currentFetch = fetchId;
 
-    // start loader
     setLoading(true);
 
-    // random delay between 2000 and 5000 ms
-    const delay = Math.floor(Math.random() * (5000 - 2000 + 1)) + 2000;
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    const itemsUrl = `${apiUrl}/api/${listType}?start=${visibleRange.start}&end=${visibleRange.end}&visibleRange=${configVisibleRange}`;
 
-    const timer = setTimeout(() => {
-      if (!mounted) return;
-      // only stop loader if this effect corresponds to the latest refresh id
-      if (currentId === refreshIdRef.current) {
+    fetch(itemsUrl)
+      .then((r) => r.json())
+      .then((json: ApiResponse) => {
+        if (!mounted) return;
+        if (currentFetch !== fetchId) return;
+        
+        const { items, start: s, total } = json;
+        setTotalCount(total);
+        setItemsCache((prev) => {
+          // Initialize or resize array if needed
+          if (prev.length !== total) {
+            prev = Array.from({ length: total }, () => null);
+          }
+          
+          const next = prev.slice();
+          for (let i = 0; i < items.length; i++) {
+            next[s + i] = items[i];
+          }
+          return next;
+        });
+      })
+      .catch((error) => {
+        console.error('Failed to fetch items:', error);
+      })
+      .finally(() => {
+        if (!mounted) return;
         setLoading(false);
-      }
-    }, delay);
+      });
 
     return () => {
       mounted = false;
-      clearTimeout(timer);
     };
-    // We intentionally only depend on refreshIdRef.current by reading its value
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [/* intentionally empty - effect triggered via refreshIdRef mutation above */]);
+  }, [visibleRange, fetchId, configVisibleRange, listType]);
 
   return (
     <div class="list-container">
@@ -88,7 +125,7 @@ export function VirtualList({ data, orientation, testId }: ListProps) {
           {isHorizontal ? "Horizontal" : "Vertical"} List
         </h3>
         <span class="item-count" aria-label="Total items">
-          Total: {data.length} items
+          Total: {totalCount} items
         </span>
       </div>
 
@@ -105,31 +142,12 @@ export function VirtualList({ data, orientation, testId }: ListProps) {
           position: "relative",
         }}
       >
-        {loading && (
-          <div
-            class="loading-overlay"
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "rgba(255,255,255,0.7)",
-              zIndex: 5,
-            }}
-            aria-hidden={!loading}
-          >
-            <div>
-              <div class="spinner" aria-hidden="true"></div>
-              <div style={{ marginTop: "0.5rem", color: "#666" }}>Loading...</div>
-            </div>
-          </div>
-        )}
+        {loading && <Loader />}
         <ReactList
           ref={listRef}
           axis={isHorizontal ? "x" : "y"}
           itemRenderer={renderItem}
-          length={data.length}
+          length={totalCount}
           type="uniform"
           useStaticSize={true}
           minSize={10}

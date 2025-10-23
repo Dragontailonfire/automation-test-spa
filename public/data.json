@@ -14,7 +14,9 @@
       "itemsPerPage": 50,
       "maxItems": 10000,
       "enableDragDrop": true,
-      "enableVirtualScroll": true
+      "enableVirtualScroll": true,
+      "initialLoadDelaySec": 3,
+      "scrollLoadDelaySec": 3
     }
   }
 }

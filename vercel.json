@@ -1,0 +1,11 @@
+{
+  "rewrites": [
+    { 
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ],
+  "env": {
+    "VITE_API_URL": ""
+  }
+}
