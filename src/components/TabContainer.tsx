@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { TabProps } from "../types";
 import { VirtualList } from "./VirtualList";
 import { DragDropList } from "./DragDropList";
@@ -20,7 +20,7 @@ export function TabContainer({
   const [activeTab, setActiveTab] = useState<string>("iframe1");
 
   // Read configuration from localStorage or environment defaults
-  const [config] = useState<any>(() => {
+  const [config, setConfig] = useState<any>(() => {
     const CONFIG_LOCAL_KEY = 'app_config';
     // default values (match ConfigPage defaults)
     const defaults = {
@@ -47,6 +47,37 @@ export function TabContainer({
       return defaults;
     }
   });
+
+  // Listen for storage changes so the app reacts when ConfigPage saves
+  useEffect(() => {
+    const onStorage = () => {
+      try {
+        const stored = localStorage.getItem('app_config');
+        if (stored) setConfig(JSON.parse(stored));
+      } catch {
+        // ignore parse errors
+      }
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  // Ensure activeTab is always one of the visible tabs; switch if it's hidden
+  useEffect(() => {
+    const visible = [] as string[];
+    if (config?.tabs?.showVertical) visible.push('iframe1');
+    if (config?.tabs?.showHorizontal) visible.push('iframe2');
+
+    if (visible.length === 0) {
+      // no tabs visible; keep activeTab but render a helpful message
+      return;
+    }
+
+    if (!visible.includes(activeTab)) {
+      setActiveTab(visible[0]);
+    }
+  }, [config, activeTab]);
 
   const tabs: Tab[] = [
     {
