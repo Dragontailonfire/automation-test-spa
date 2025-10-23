@@ -1,6 +1,4 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 
 interface Config {
   tabs: {
@@ -21,31 +19,24 @@ interface Config {
   };
 }
 
-const defaultConfig: Config = {
+const config: Config = {
   tabs: {
     showVertical: true,
     showHorizontal: true
   },
   lists: {
     vertical: {
-      total: 10000,
-      visibleRange: 50,
-      prefix: 'Vertical'
+      total: process.env.VERTICAL_LIST_TOTAL ? parseInt(process.env.VERTICAL_LIST_TOTAL) : 10000,
+      visibleRange: process.env.VERTICAL_LIST_RANGE ? parseInt(process.env.VERTICAL_LIST_RANGE) : 50,
+      prefix: process.env.VERTICAL_LIST_PREFIX || 'Vertical'
     },
     horizontal: {
-      total: 100,
-      visibleRange: 20,
-      prefix: 'Horizontal'
+      total: process.env.HORIZONTAL_LIST_TOTAL ? parseInt(process.env.HORIZONTAL_LIST_TOTAL) : 100,
+      visibleRange: process.env.HORIZONTAL_LIST_RANGE ? parseInt(process.env.HORIZONTAL_LIST_RANGE) : 20,
+      prefix: process.env.HORIZONTAL_LIST_PREFIX || 'Horizontal'
     }
   }
 };
-
-let config: Config;
-try {
-  config = JSON.parse(readFileSync(join(process.cwd(), 'api', 'data', 'config.json'), 'utf8'));
-} catch (e) {
-  config = defaultConfig;
-}
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   // Allow config to be fetched with /api/config
