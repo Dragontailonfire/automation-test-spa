@@ -1,29 +1,38 @@
-import { useEffect, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import { Config } from "../types";
-import { Loader } from "./Loader";
 
 const CONFIG_LOCAL_KEY = "app_config";
 
-export function ConfigPage() {
-  const [config, setConfig] = useState<Config | null>(null);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || '';
-        const resp = await fetch(`${apiUrl}/api/config`);
-        const json = await resp.json();
-        setConfig(json);
-      } catch (err) {
-        console.error("Failed to load config:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+// Default configuration from environment variables with fallbacks
+const defaultConfig: Config = {
+  tabs: {
+    showVertical: true,
+    showHorizontal: true
+  },
+  lists: {
+    vertical: {
+      total: import.meta.env.VITE_VERTICAL_LIST_TOTAL ? parseInt(import.meta.env.VITE_VERTICAL_LIST_TOTAL) : 10000,
+      visibleRange: import.meta.env.VITE_VERTICAL_LIST_RANGE ? parseInt(import.meta.env.VITE_VERTICAL_LIST_RANGE) : 50,
+      prefix: import.meta.env.VITE_VERTICAL_LIST_PREFIX || 'Vertical'
+    },
+    horizontal: {
+      total: import.meta.env.VITE_HORIZONTAL_LIST_TOTAL ? parseInt(import.meta.env.VITE_HORIZONTAL_LIST_TOTAL) : 100,
+      visibleRange: import.meta.env.VITE_HORIZONTAL_LIST_RANGE ? parseInt(import.meta.env.VITE_HORIZONTAL_LIST_RANGE) : 20,
+      prefix: import.meta.env.VITE_HORIZONTAL_LIST_PREFIX || 'Horizontal'
+    }
+  }
+};
 
-    fetchConfig();
-  }, []);
+export function ConfigPage() {
+  const [config, setConfig] = useState<Config>(() => {
+    // Try to get config from localStorage, fall back to default
+    try {
+      const stored = localStorage.getItem(CONFIG_LOCAL_KEY);
+      return stored ? JSON.parse(stored) : defaultConfig;
+    } catch {
+      return defaultConfig;
+    }
+  });
 
   const updateConfig = (newConfig: Config) => {
     setConfig(newConfig);
@@ -58,10 +67,6 @@ export function ConfigPage() {
     };
     updateConfig(newConfig);
   };
-
-  if (loading) {
-    return <Loader fullscreen />;
-  }
 
   if (!config) {
     return <div class="error-message">Failed to load configuration</div>;
