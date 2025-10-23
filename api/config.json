@@ -1,0 +1,18 @@
+{
+  "tabs": {
+    "showVertical": true,
+    "showHorizontal": true
+  },
+  "lists": {
+    "vertical": {
+      "total": 10000,
+      "visibleRange": 50,
+      "prefix": "Vertical"
+    },
+    "horizontal": {
+      "total": 100,
+      "visibleRange": 20,
+      "prefix": "Horizontal"
+    }
+  }
+}

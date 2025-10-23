@@ -21,28 +21,30 @@ interface Config {
   };
 }
 
+const defaultConfig: Config = {
+  tabs: {
+    showVertical: true,
+    showHorizontal: true
+  },
+  lists: {
+    vertical: {
+      total: 10000,
+      visibleRange: 50,
+      prefix: 'Vertical'
+    },
+    horizontal: {
+      total: 100,
+      visibleRange: 20,
+      prefix: 'Horizontal'
+    }
+  }
+};
+
 let config: Config;
 try {
-  config = JSON.parse(readFileSync(join(process.cwd(), 'server', 'config.json'), 'utf8'));
+  config = JSON.parse(readFileSync(join(process.cwd(), 'api', 'config.json'), 'utf8'));
 } catch (e) {
-  config = {
-    tabs: {
-      showVertical: true,
-      showHorizontal: true
-    },
-    lists: {
-      vertical: {
-        total: 10000,
-        visibleRange: 50,
-        prefix: 'Vertical'
-      },
-      horizontal: {
-        total: 100,
-        visibleRange: 20,
-        prefix: 'Horizontal'
-      }
-    }
-  };
+  config = defaultConfig;
 }
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
