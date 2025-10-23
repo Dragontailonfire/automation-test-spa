@@ -139,9 +139,7 @@ export function TabContainer({
             {tab.label}
           </button>
         ))}
-        <a href="/config" class="tab-button" style={{ marginLeft: "auto" }}>
-          Config
-        </a>
+        {/* Config link removed; now a modal in App */}
       </nav>
 
       <div

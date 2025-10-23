@@ -17,6 +17,9 @@ interface ApiResponse {
 }
 
 export function VirtualList({ orientation, testId, visibleRange: configVisibleRange }: ListProps) {
+  // The current page (API fetch) range
+  const [pageRange, setPageRange] = useState<VisibleRange>({ start: 0, end: configVisibleRange || 10 });
+  // The actual visible range in the viewport
   const [visibleRange, setVisibleRange] = useState<VisibleRange>({ start: 0, end: 10 });
   const [totalCount, setTotalCount] = useState<number>(0);
   const listRef = useRef<any>(null);
@@ -63,33 +66,41 @@ export function VirtualList({ orientation, testId, visibleRange: configVisibleRa
     [itemsCache, testId]
   );
 
+  // Only update pageRange if visibleRange crosses a page boundary
   const handleScroll = useCallback(() => {
     if (listRef.current) {
       const indices = listRef.current.getVisibleRange();
       if (indices) {
-        setVisibleRange({ start: indices[0], end: indices[1] });
-        // trigger fetch for the visible range
-        setFetchId((id) => id + 1);
+        const [start, end] = indices;
+        setVisibleRange({ start, end });
+        const pageSize = configVisibleRange || 10;
+        const pageStart = Math.floor(start / pageSize) * pageSize;
+        const pageEnd = pageStart + pageSize;
+        // Only update if page changes
+        if (pageRange.start !== pageStart || pageRange.end !== pageEnd) {
+          setPageRange({ start: pageStart, end: pageEnd });
+          setFetchId((id) => id + 1);
+        }
       }
     }
-  }, []);
+  }, [configVisibleRange, pageRange.start, pageRange.end]);
 
-  // fetch items from API when visibleRange changes
+  // fetch items from API when pageRange changes
   useEffect(() => {
     let mounted = true;
     const currentFetch = fetchId;
-
+    const controller = new AbortController();
     setLoading(true);
 
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    const itemsUrl = `${apiUrl}/api/${listType}?start=${visibleRange.start}&end=${visibleRange.end}&visibleRange=${configVisibleRange}`;
+    const pageSize = configVisibleRange || 10;
+    const itemsUrl = `${apiUrl}/api/${listType}?start=${pageRange.start}&visibleRange=${pageSize}`;
 
-    fetch(itemsUrl)
+    fetch(itemsUrl, { signal: controller.signal })
       .then((r) => r.json())
       .then((json: ApiResponse) => {
         if (!mounted) return;
         if (currentFetch !== fetchId) return;
-        
         const { items, start: s, total } = json;
         setTotalCount(total);
         setItemsCache((prev) => {
@@ -97,7 +108,6 @@ export function VirtualList({ orientation, testId, visibleRange: configVisibleRa
           if (prev.length !== total) {
             prev = Array.from({ length: total }, () => null);
           }
-          
           const next = prev.slice();
           for (let i = 0; i < items.length; i++) {
             next[s + i] = items[i];
@@ -106,6 +116,7 @@ export function VirtualList({ orientation, testId, visibleRange: configVisibleRa
         });
       })
       .catch((error) => {
+        if (error.name === 'AbortError') return;
         console.error('Failed to fetch items:', error);
       })
       .finally(() => {
@@ -115,8 +126,9 @@ export function VirtualList({ orientation, testId, visibleRange: configVisibleRa
 
     return () => {
       mounted = false;
+      controller.abort();
     };
-  }, [visibleRange, fetchId, configVisibleRange, listType]);
+  }, [pageRange, fetchId, configVisibleRange, listType]);
 
   return (
     <div class="list-container">

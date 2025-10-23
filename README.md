@@ -44,11 +44,9 @@ pnpm dev
 
 4. Open the app at the address printed by Vite (usually http://localhost:5173).
 
-Notes about the Config page
+Configuration
 
-- The Config page has a Back button (← Back) that will attempt to navigate back in history or return to `/` if history is empty. When you save overrides, the app will apply them immediately via localStorage.
-
-- Configuration in production is handled via environment variables (set in Vercel or your host). The app uses the following env vars with sensible defaults:
+- All configuration is handled via environment variables (set in Vercel or your host). The app uses the following env vars with sensible defaults:
 
 ```
 VERTICAL_LIST_TOTAL=10000
@@ -72,4 +70,4 @@ You have two options when deploying on Vercel:
  - Set a Vite environment variable `VITE_CONFIG_API_URL` in your Vercel project settings to point to your config endpoint (for example, `https://example.com/config`).
  - The app will prefer this URL when fetching config.
 
-Either approach ensures the app can fetch delay configuration in production. The `/config` page in the app reads and saves overrides to local/session storage for quick testing, but production values should come from the API or Vercel environment variables.
+Either approach ensures the app can fetch delay configuration in production. The configuration UI is now a modal within the SPA, not a separate page or route.

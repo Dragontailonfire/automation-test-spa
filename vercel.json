@@ -3,9 +3,11 @@
     { 
       "source": "/api/:path*",
       "destination": "/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
-  "env": {
-    "VITE_API_URL": ""
-  }
+  "cleanUrls": true
 }

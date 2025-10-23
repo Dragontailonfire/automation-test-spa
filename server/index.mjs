@@ -80,10 +80,11 @@ const server = http.createServer(async (req, res) => {
         res.end(body);
         return;
       }
-    } catch {}
+    } catch (e) {}
 
     res.writeHead(404);
     res.end('Not found');
+    return;
   } catch (err) {
     res.writeHead(500);
     res.end(String(err));
