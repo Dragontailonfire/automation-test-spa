@@ -1,5 +1,6 @@
 import { useState } from "preact/hooks";
 import { TabContainer } from "./components/TabContainer";
+import { ConfigPage } from "./components/ConfigPage";
 import { Item } from "./types";
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
@@ -60,7 +61,7 @@ export function App() {
             >
               ×
             </button>
-            {/* ConfigPage removed: config modal logic will be handled here if needed */}
+            <ConfigPage />
           </div>
         </div>
       )}
