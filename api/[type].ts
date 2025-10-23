@@ -42,7 +42,7 @@ const defaultConfig: Config = {
 
 let config: Config;
 try {
-  config = JSON.parse(readFileSync(join(process.cwd(), 'api', 'config.json'), 'utf8'));
+  config = JSON.parse(readFileSync(join(process.cwd(), 'api', 'data', 'config.json'), 'utf8'));
 } catch (e) {
   config = defaultConfig;
 }
