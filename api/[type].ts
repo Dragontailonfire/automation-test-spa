@@ -1,12 +1,6 @@
+
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-interface ListConfig {
-  total: number;
-  visibleRange: number;
-  prefix: string;
-}
-
-// Default configurations with fallbacks
 const lists = {
   vertical: {
     total: process.env.VERTICAL_LIST_TOTAL ? parseInt(process.env.VERTICAL_LIST_TOTAL) : 10000,

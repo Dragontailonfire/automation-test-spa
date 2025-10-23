@@ -34,80 +34,78 @@ export function ConfigPage() {
     }
   });
 
-  const updateConfig = (newConfig: Config) => {
-    setConfig(newConfig);
-    localStorage.setItem(CONFIG_LOCAL_KEY, JSON.stringify(newConfig));
-    // Trigger a refresh for components listening to storage events
+  const [pendingConfig, setPendingConfig] = useState<Config>(config);
+  const [saved, setSaved] = useState(false);
+
+  const saveConfig = () => {
+    setConfig(pendingConfig);
+    localStorage.setItem(CONFIG_LOCAL_KEY, JSON.stringify(pendingConfig));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1200);
     window.dispatchEvent(new Event('storage'));
   };
 
   const updateVisibility = (listType: 'vertical' | 'horizontal', visible: boolean) => {
-    if (!config) return;
-    const newConfig = {
-      ...config,
+    setPendingConfig((prev) => ({
+      ...prev,
       tabs: {
-        ...config.tabs,
+        ...prev.tabs,
         [listType === 'vertical' ? 'showVertical' : 'showHorizontal']: visible
       }
-    };
-    updateConfig(newConfig);
+    }));
   };
 
   const updateRange = (listType: 'vertical' | 'horizontal', range: number) => {
-    if (!config) return;
-    const newConfig = {
-      ...config,
+    setPendingConfig((prev) => ({
+      ...prev,
       lists: {
-        ...config.lists,
+        ...prev.lists,
         [listType]: {
-          ...config.lists[listType],
+          ...prev.lists[listType],
           visibleRange: range
         }
       }
-    };
-    updateConfig(newConfig);
+    }));
   };
 
-  if (!config) {
+  const updateTotal = (listType: 'vertical' | 'horizontal', total: number) => {
+    setPendingConfig((prev) => ({
+      ...prev,
+      lists: {
+        ...prev.lists,
+        [listType]: {
+          ...prev.lists[listType],
+          total
+        }
+      }
+    }));
+  };
+
+  if (!pendingConfig) {
     return <div class="error-message">Failed to load configuration</div>;
   }
 
   return (
     <div class="config-page">
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-        <button
-          onClick={() => {
-            try {
-              if (history && history.length > 1) history.back();
-              else window.location.href = "/";
-            } catch {
-              window.location.href = "/";
-            }
-          }}
-        >
-          ← Back
-        </button>
-        <h2 style={{ margin: 0 }}>List Configuration</h2>
-      </div>
-      
+      <h2 style={{ margin: 0, marginBottom: '1rem' }}>List Configuration</h2>
       <section class="config-section">
         <h3>Tab Visibility</h3>
         <div class="config-group">
           <label>
             <input
               type="checkbox"
-              checked={config.tabs.showVertical}
+              checked={pendingConfig.tabs.showVertical}
               onChange={(e) => updateVisibility('vertical', (e.target as HTMLInputElement).checked)}
             />
-            Show Vertical List
+            Show List & Scroll Tab
           </label>
           <label>
             <input
               type="checkbox"
-              checked={config.tabs.showHorizontal}
+              checked={pendingConfig.tabs.showHorizontal}
               onChange={(e) => updateVisibility('horizontal', (e.target as HTMLInputElement).checked)}
             />
-            Show Horizontal List
+            Show Drag & Drop Tab
           </label>
         </div>
       </section>
@@ -117,32 +115,55 @@ export function ConfigPage() {
         <div class="config-group">
           <div class="range-input">
             <label>
+              Vertical List Total Items
+              <input
+                type="number"
+                min="1"
+                value={pendingConfig.lists.vertical.total}
+                onChange={(e) => updateTotal('vertical', parseInt((e.target as HTMLInputElement).value) || 1)}
+              />
+            </label>
+            <label>
               Vertical List Visible Range
               <input
                 type="number"
                 min="1"
-                max={config.lists.vertical.total}
-                value={config.lists.vertical.visibleRange}
+                max={pendingConfig.lists.vertical.total}
+                value={pendingConfig.lists.vertical.visibleRange}
                 onChange={(e) => updateRange('vertical', parseInt((e.target as HTMLInputElement).value) || 1)}
               />
             </label>
-            <span class="help-text">Total items: {config.lists.vertical.total}</span>
           </div>
           <div class="range-input">
+            <label>
+              Horizontal List Total Items
+              <input
+                type="number"
+                min="1"
+                value={pendingConfig.lists.horizontal.total}
+                onChange={(e) => updateTotal('horizontal', parseInt((e.target as HTMLInputElement).value) || 1)}
+              />
+            </label>
             <label>
               Horizontal List Visible Range
               <input
                 type="number"
                 min="1"
-                max={config.lists.horizontal.total}
-                value={config.lists.horizontal.visibleRange}
+                max={pendingConfig.lists.horizontal.total}
+                value={pendingConfig.lists.horizontal.visibleRange}
                 onChange={(e) => updateRange('horizontal', parseInt((e.target as HTMLInputElement).value) || 1)}
               />
             </label>
-            <span class="help-text">Total items: {config.lists.horizontal.total}</span>
           </div>
         </div>
       </section>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
+        <button onClick={saveConfig} style={{ padding: '0.5rem 1.5rem', fontSize: '1rem', background: '#3498db', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+          Save
+        </button>
+        {saved && <span style={{ color: 'green', marginLeft: 8 }}>Saved!</span>}
+      </div>
 
       <style>{`
         .config-page {
@@ -176,7 +197,7 @@ export function ConfigPage() {
           gap: 0.5rem;
         }
         input[type="number"] {
-          width: 100px;
+          width: 120px;
           padding: 0.25rem;
         }
         .error-message {
