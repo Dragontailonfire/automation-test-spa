@@ -6,7 +6,7 @@
 
 ## Local API server (dev)
 
-For easier control over simulated delays, a small local API server is available. It serves `server/config.json` at `/api/config`.
+For easier control over simulated delays, a small local API server is available. It reads `server/config.json` for local defaults, but the app no longer exposes a `/api/config` endpoint in production; configuration is read from environment variables with safe defaults.
 
 To run it in development:
 
@@ -34,7 +34,7 @@ pnpm install
 pnpm api
 ```
 
-The local API server listens by default on port 4001 and serves `server/config.json` at `/api/config`.
+The local API server listens by default on port 4001. For local development it will read `server/config.json` to provide list defaults if environment variables are not set.
 
 3. In another terminal start the Vite dev server:
 
@@ -46,9 +46,18 @@ pnpm dev
 
 Notes about the Config page
 
-- The Config page has a Back button (← Back) that will attempt to navigate back in history or return to `/` if history is empty. When you save overrides, the app will apply them immediately via sessionStorage.
+- The Config page has a Back button (← Back) that will attempt to navigate back in history or return to `/` if history is empty. When you save overrides, the app will apply them immediately via localStorage.
 
-Edit `server/config.json` to change `initialLoadDelaySec` and `scrollLoadDelaySec` and the app will pick those up on reload. The `Config` page also reads from the API and can save overrides into session/local storage at runtime.
+- Configuration in production is handled via environment variables (set in Vercel or your host). The app uses the following env vars with sensible defaults:
+
+```
+VERTICAL_LIST_TOTAL=10000
+VERTICAL_LIST_RANGE=50
+HORIZONTAL_LIST_TOTAL=100
+HORIZONTAL_LIST_RANGE=20
+```
+
+For local development you can edit `server/config.json` or set the environment variables locally; the local API server will fall back to `server/config.json` when env vars are not present.
 
 ## Deploying to Vercel
 
@@ -56,7 +65,7 @@ You have two options when deploying on Vercel:
 
 1) Use the included serverless function
 
- - The `api/config.js` file will be deployed as a serverless function at `/api/config` by Vercel automatically. This mirrors the dev API and requires no additional environment variables.
+-- The app no longer relies on a serverless `/api/config` function for production. Use environment variables in Vercel instead.
 
 2) Use an external config API
 

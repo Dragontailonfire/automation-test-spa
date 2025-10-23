@@ -1,4 +1,4 @@
-import { useState, useEffect } from "preact/hooks";
+import { useState } from "preact/hooks";
 import { TabProps } from "../types";
 import { VirtualList } from "./VirtualList";
 import { DragDropList } from "./DragDropList";
@@ -19,26 +19,34 @@ export function TabContainer({
 }: TabProps) {
   const [activeTab, setActiveTab] = useState<string>("iframe1");
 
-  const [config, setConfig] = useState<any>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    const fetchConfig = async () => {
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || '';
-        const response = await fetch(`${apiUrl}/api/config`);
-        const data = await response.json();
-        if (mounted) setConfig(data);
-      } catch (error) {
-        console.error('Failed to fetch config:', error);
+  // Read configuration from localStorage or environment defaults
+  const [config] = useState<any>(() => {
+    const CONFIG_LOCAL_KEY = 'app_config';
+    // default values (match ConfigPage defaults)
+    const defaults = {
+      tabs: {
+        showVertical: true,
+        showHorizontal: true
+      },
+      lists: {
+        vertical: {
+          total: import.meta.env.VITE_VERTICAL_LIST_TOTAL ? parseInt(import.meta.env.VITE_VERTICAL_LIST_TOTAL) : 10000,
+          visibleRange: import.meta.env.VITE_VERTICAL_LIST_RANGE ? parseInt(import.meta.env.VITE_VERTICAL_LIST_RANGE) : 50
+        },
+        horizontal: {
+          total: import.meta.env.VITE_HORIZONTAL_LIST_TOTAL ? parseInt(import.meta.env.VITE_HORIZONTAL_LIST_TOTAL) : 100,
+          visibleRange: import.meta.env.VITE_HORIZONTAL_LIST_RANGE ? parseInt(import.meta.env.VITE_HORIZONTAL_LIST_RANGE) : 20
+        }
       }
     };
 
-    fetchConfig();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    try {
+      const stored = localStorage.getItem(CONFIG_LOCAL_KEY);
+      return stored ? JSON.parse(stored) : defaults;
+    } catch {
+      return defaults;
+    }
+  });
 
   const tabs: Tab[] = [
     {
