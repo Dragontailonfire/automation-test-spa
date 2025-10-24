@@ -1,8 +1,13 @@
-import handler from './[type]';
 import { VercelRequest, VercelResponse } from '@vercel/node';
+import handler from './[type]';
 
-export default function (req: VercelRequest, res: VercelResponse) {
-  // forward to dynamic handler with type=vertical
-  req.query = { ...(req.query || {}), type: 'vertical' } as any;
+export const config = {
+  runtime: 'nodejs18.x'
+};
+
+export default async function (req: VercelRequest, res: VercelResponse) {
+  // Set query type before forwarding
+  if (!req.query) req.query = {};
+  req.query.type = 'vertical';
   return handler(req, res);
 }

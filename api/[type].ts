@@ -1,6 +1,10 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
+export const config = {
+  runtime: 'nodejs18.x'
+};
+
 const lists = {
   vertical: {
     total: process.env.VERTICAL_LIST_TOTAL ? parseInt(process.env.VERTICAL_LIST_TOTAL) : 10000,

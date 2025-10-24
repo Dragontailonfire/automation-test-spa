@@ -1,0 +1,230 @@
+import { VercelRequest, VercelResponse } from '@vercel/node';import { VercelRequest, VercelResponse } from '@vercel/node';
+
+
+
+interface Config {interface Config {
+
+  tabs: {  tabs: {
+
+    showVertical: boolean;    showVertical: boolean;
+
+    showHorizontal: boolean;    showHorizontal: boolean;
+
+  };  };
+
+  lists: {  lists: {
+
+    vertical: {    vertical: {
+
+      total: number;      total: number;
+
+      visibleRange: number;      visibleRange: number;
+
+      prefix: string;      prefix: string;
+
+    };    };
+
+    horizontal: {    horizontal: {
+
+      total: number;      total: number;
+
+      visibleRange: number;      visibleRange: number;
+
+      prefix: string;      prefix: string;
+
+    };    };
+
+  };  };
+
+}}
+
+
+
+const config: Config = {const config: Config = {
+
+  tabs: {  tabs: {
+
+    showVertical: true,    showVertical: true,
+
+    showHorizontal: true    showHorizontal: true
+
+  },  },
+
+  lists: {  lists: {
+
+    vertical: {    vertical: {
+
+      total: process.env.VERTICAL_LIST_TOTAL ? parseInt(process.env.VERTICAL_LIST_TOTAL) : 10000,      total: process.env.VERTICAL_LIST_TOTAL ? parseInt(process.env.VERTICAL_LIST_TOTAL) : 10000,
+
+      visibleRange: process.env.VERTICAL_LIST_RANGE ? parseInt(process.env.VERTICAL_LIST_RANGE) : 50,      visibleRange: process.env.VERTICAL_LIST_RANGE ? parseInt(process.env.VERTICAL_LIST_RANGE) : 50,
+
+      prefix: process.env.VERTICAL_LIST_PREFIX || 'Vertical'      prefix: process.env.VERTICAL_LIST_PREFIX || 'Vertical'
+
+    },    },
+
+    horizontal: {    horizontal: {
+
+      total: process.env.HORIZONTAL_LIST_TOTAL ? parseInt(process.env.HORIZONTAL_LIST_TOTAL) : 100,      total: process.env.HORIZONTAL_LIST_TOTAL ? parseInt(process.env.HORIZONTAL_LIST_TOTAL) : 100,
+
+      visibleRange: process.env.HORIZONTAL_LIST_RANGE ? parseInt(process.env.HORIZONTAL_LIST_RANGE) : 20,      visibleRange: process.env.HORIZONTAL_LIST_RANGE ? parseInt(process.env.HORIZONTAL_LIST_RANGE) : 20,
+
+      prefix: process.env.HORIZONTAL_LIST_PREFIX || 'Horizontal'      prefix: process.env.HORIZONTAL_LIST_PREFIX || 'Horizontal'
+
+    }    }
+
+  }  }
+
+};};
+
+
+
+export default function handler(req: VercelRequest, res: VercelResponse) {export default function handler(req: VercelRequest, res: VercelResponse) {
+
+  try {  try {
+
+    // Log the incoming request    // Allow config to be fetched with /api/config
+
+    console.log('API request:', {    if (req.query.type === 'config') {
+
+      type: req.query.type,      // Only send the parts of config that the frontend needs
+
+      start: req.query.start,      return res.json({
+
+      visibleRange: req.query.visibleRange        tabs: config.tabs,
+
+    });        lists: {
+
+    console.log('Current config:', config);          vertical: {
+
+            total: config.lists.vertical.total,
+
+    // Allow config to be fetched with /api/config            visibleRange: config.lists.vertical.visibleRange
+
+    if (req.query.type === 'config') {  try {
+
+      // Only send the parts of config that the frontend needs    const start = Number(req.query.start) || 0;
+
+      return res.json({    const configVisibleRange = config.lists[listType]?.visibleRange;
+
+        tabs: config.tabs,    if (typeof configVisibleRange !== 'number') {
+
+        lists: {      console.error(`Invalid visibleRange for ${listType}: ${configVisibleRange}`);
+
+          vertical: {      return res.status(500).json({ error: 'Invalid list configuration' });
+
+            total: config.lists.vertical.total,    }
+
+            visibleRange: config.lists.vertical.visibleRange    
+
+          },    const visibleRange = Number(req.query.visibleRange) || configVisibleRange;
+
+          horizontal: {    const end = start + visibleRange;
+
+            total: config.lists.horizontal.total,
+
+            visibleRange: config.lists.horizontal.visibleRange    const listConfig = config.lists[listType];
+
+          }    if (!listConfig || typeof listConfig.total !== 'number' || typeof listConfig.prefix !== 'string') {
+
+        }      console.error(`Invalid list config for ${listType}:`, listConfig);
+
+      });      return res.status(500).json({ error: 'Invalid list configuration' });
+
+    }    }
+
+
+
+    const listType = req.query.type as string;    // clamp indices
+
+    if (!['vertical', 'horizontal'].includes(listType)) {    const s = Math.max(0, start);
+
+      console.error(`Invalid list type received: ${listType}`);    const e = Math.max(s, Math.min(listConfig.total, end));
+
+      return res.status(400).json({ error: 'Invalid list type' });
+
+    }    // generate items on demand
+
+    const items = [];
+
+    try {    for (let i = s; i < e; i++) {
+
+      const start = Number(req.query.start) || 0;      items.push({
+
+      const configVisibleRange = config.lists[listType]?.visibleRange;        id: `${listConfig.prefix}-${i}`,
+
+              text: `${listConfig.prefix} Item ${i}`,
+
+      if (typeof configVisibleRange !== 'number') {        value: Math.floor(Math.random() * 1000)
+
+        console.error(`Invalid visibleRange for ${listType}: ${configVisibleRange}`);      });
+
+        return res.status(500).json({ error: 'Invalid list configuration' });    }
+
+      }
+
+          return res.json({
+
+      const visibleRange = Number(req.query.visibleRange) || configVisibleRange;      items,
+
+      const end = start + visibleRange;      start: s,
+
+      end: e,
+
+      const listConfig = config.lists[listType];      total: listConfig.total,
+
+      if (!listConfig || typeof listConfig.total !== 'number' || typeof listConfig.prefix !== 'string') {      visibleRange
+
+        console.error(`Invalid list config for ${listType}:`, listConfig);    });
+
+        return res.status(500).json({ error: 'Invalid list configuration' });  } catch (error) {
+
+      }    console.error(`Error generating list items for ${listType}:`, error);
+
+    return res.status(500).json({ error: 'Failed to generate list items' });
+
+      // clamp indices  }st items = [];
+
+      const s = Math.max(0, start);  for (let i = s; i < e; i++) {
+
+      const e = Math.max(s, Math.min(listConfig.total, end));    items.push({
+
+      id: `${listConfig.prefix}-${i}`,
+
+      // generate items on demand      text: `${listConfig.prefix} Item ${i}`,
+
+      const items = [];      value: Math.floor(Math.random() * 1000)
+
+      for (let i = s; i < e; i++) {    });
+
+        items.push({  }
+
+          id: `${listConfig.prefix}-${i}`,
+
+          text: `${listConfig.prefix} Item ${i}`,  res.json({
+
+          value: Math.floor(Math.random() * 1000)    items,
+
+        });    start: s,
+
+      }    end: e,
+
+    total: listConfig.total,
+
+      return res.json({    visibleRange
+
+        items,  });
+
+        start: s,}
+        end: e,
+        total: listConfig.total,
+        visibleRange
+      });
+    } catch (error) {
+      console.error(`Error generating list items for ${listType}:`, error);
+      return res.status(500).json({ error: 'Failed to generate list items' });
+    }
+  } catch (error) {
+    console.error('Unhandled error in API handler:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
