@@ -2,7 +2,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import handler from './[type]';
 
 export const config = {
-  runtime: 'nodejs18.x'
+  runtime: 'nodejs'
 };
 
 export default async function (req: VercelRequest, res: VercelResponse) {
