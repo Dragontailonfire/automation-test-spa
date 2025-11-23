@@ -3,14 +3,7 @@ import { TabContainer } from "./components/TabContainer";
 import { Item } from "./types";
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
-
-const generateData = (count: number, prefix: string): Item[] => {
-  return Array.from({ length: count }, (_, i) => ({
-    id: `${prefix}-${i}`,
-    text: `${prefix} Item ${i}`,
-    value: Math.floor(Math.random() * 1000),
-  }));
-};
+import { generateData } from "./utils/dataUtils";
 
 inject();
 injectSpeedInsights();
@@ -20,18 +13,35 @@ export function App() {
   const [horizontalData, setHorizontalData] = useState<Item[]>([]);
   const [dragListA, setDragListA] = useState<Item[]>([]);
   const [dragListB, setDragListB] = useState<Item[]>([]);
+  const [appTitle, setAppTitle] = useState("Challenger Office Management");
 
   useEffect(() => {
-    setVerticalData(generateData(10000, "Vertical"));
-    setHorizontalData(generateData(10000, "Horizontal"));
-    setDragListA(generateData(20, "Drag-A"));
-    setDragListB(generateData(20, "Drag-B"));
+    // Randomize Title
+    const titles = [
+      "SkyNet Admin Portal",
+      "Cyberdyne Systems CRM",
+      "Initech Global Dashboard",
+      "Massive Dynamic Intranet",
+      "Wayne Enterprises Ops",
+      "Aperture Science Testing",
+      "Black Mesa Research DB",
+      "Umbrella Corp Secure Net",
+      "Stark Industries Mainframe"
+    ];
+    const randomTitle = titles[Math.floor(Math.random() * titles.length)];
+    setAppTitle(randomTitle);
+    document.title = randomTitle;
+
+    setVerticalData(generateData(100000, "Order"));
+    setHorizontalData(generateData(10000, "Gallery"));
+    setDragListA(generateData(20, "Pending"));
+    setDragListB(generateData(20, "Processed"));
   }, []);
 
   return (
     <div class="app-container" role="application">
       <header class="app-header" data-testid="app-header">
-        <h1 aria-label="Application Title">Automation Testing Challenge</h1>
+        <h1 aria-label="Application Title">{appTitle}</h1>
       </header>
 
       <main class="main-content">
@@ -48,7 +58,7 @@ export function App() {
       <footer class="footer">
         <div>
           <div>
-            <span>© 2025 NVK</span>
+            <span>© 2025 NVK | Automation Playground</span>
           </div>
         </div>
       </footer>

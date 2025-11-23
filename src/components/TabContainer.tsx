@@ -3,7 +3,9 @@ import { TabProps } from "../types";
 import { VirtualList } from "./VirtualList";
 import { DragDropList } from "./DragDropList";
 import { IFrameWrapper } from "./IFrameWrapper";
-import { IFrameHeader1, IFrameHeader2 } from "./IFrameContent";
+import { ShadowDomWidget } from "./ShadowDomWidget";
+import { DelayedLoader } from "./DelayedLoader";
+import { DynamicForm } from "./DynamicForm";
 
 interface Tab {
   id: string;
@@ -24,71 +26,72 @@ export function TabContainer({
   const tabs: Tab[] = [
     {
       id: "iframe1",
-      label: "Lists & Scroll",
-      ariaLabel: "Virtual lists and scrolling tab",
+      label: "Orders",
+      ariaLabel: "Customer orders tab",
     },
     {
       id: "iframe2",
-      label: "Drag & Drop",
-      ariaLabel: "Drag and drop interface tab",
+      label: "Workflow",
+      ariaLabel: "Order workflow tab",
+    },
+    {
+      id: "shadow",
+      label: "System Status",
+      ariaLabel: "System status tab",
+    },
+    {
+      id: "delayed",
+      label: "Analytics",
+      ariaLabel: "Analytics dashboard tab",
+    },
+    {
+      id: "dynamic",
+      label: "Support Ticket",
+      ariaLabel: "Support ticket tab",
     },
   ];
 
-  const tabContent = {
-    iframe1: (
-      <IFrameWrapper id="test-iframe-1" title="Test iFrame 1">
-        <>
-          <style>{`
-            .list-container { margin-bottom: 2rem; }
-            .list-header { display: flex; justify-content: space-between; margin-bottom: 1rem; }
-            .vertical-list { height: 400px; border: 2px solid #e0e0e0; overflow: auto; background: #fafafa; }
-            .horizontal-list { height: 120px; border: 2px solid #e0e0e0; overflow-x: auto; overflow-y: hidden; background: #fafafa; white-space: nowrap; }
-            .list-item { padding: 1rem; border-bottom: 1px solid #e0e0e0; transition: background 0.2s; cursor: pointer; }
-            .list-item:hover { background: #e8f4f8; }
-            .horizontal-list .list-item { display: inline-block; width: 200px; vertical-align: top; white-space: normal; }
-            .item-content { display: flex; justify-content: space-between; align-items: center; }
-            .item-text { font-weight: 500; color: #333; }
-            .item-value { color: #666; font-size: 0.9rem; }
-            .load-more-button { display: block; margin: 2rem auto; padding: 0.75rem 2rem; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
-            .load-more-button:hover { background: #2980b9; }
-          `}</style>
-          <IFrameHeader1 />
-          <VirtualList
-            data={verticalData}
-            orientation="vertical"
-            testId="vertical-scroll-list"
-          />
-          <VirtualList
-            data={horizontalData}
-            orientation="horizontal"
-            testId="horizontal-scroll-list"
-          />
-        </>
-      </IFrameWrapper>
-    ),
-    iframe2: (
-      <IFrameWrapper id="test-iframe-2" title="Test iFrame 2">
-        <>
-          <style>{`
-            .drag-drop-container { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
-            .drag-list { border: 2px dashed #3498db; border-radius: 8px; padding: 1rem; min-height: 300px; background: #f8f9fa; }
-            .drag-list-header { text-align: center; font-weight: 600; color: #2c3e50; margin-bottom: 1rem; font-size: 1.1rem; }
-            .drag-item { background: white; border: 1px solid #ddd; border-radius: 4px; padding: 0.75rem; margin-bottom: 0.5rem; cursor: move; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
-            .drag-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); transform: translateY(-2px); }
-            .drag-item.dragging { opacity: 0.5; transform: rotate(5deg); }
-            .drag-handle { color: #999; margin-right: 0.5rem; }
-            .nested-div { margin-top: 2rem; }
-          `}</style>
-          <IFrameHeader2 />
-          <DragDropList
-            listA={dragListA}
-            listB={dragListB}
-            onListAChange={onDragListAChange}
-            onListBChange={onDragListBChange}
-          />
-        </>
-      </IFrameWrapper>
-    ),
+  const renderContent = () => {
+    switch (activeTab) {
+      case "iframe1":
+        return (
+          <IFrameWrapper id="test-iframe-1" title="Test iFrame 1">
+            <>
+              <VirtualList
+                data={verticalData}
+                orientation="vertical"
+                testId="vertical-scroll-list"
+              />
+              <VirtualList
+                data={horizontalData}
+                orientation="horizontal"
+                testId="horizontal-scroll-list"
+              />
+            </>
+          </IFrameWrapper>
+        );
+      case "iframe2":
+        return (
+          <IFrameWrapper id="test-iframe-2" title="Test iFrame 2">
+            <>
+              <DragDropList
+                listA={dragListA}
+                listB={dragListB}
+                onListAChange={onDragListAChange}
+                onListBChange={onDragListBChange}
+              />
+            </>
+          </IFrameWrapper>
+        );
+      case "shadow":
+        return <ShadowDomWidget />;
+      case "delayed":
+        return <DelayedLoader />;
+      case "dynamic":
+        return <DynamicForm />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -116,7 +119,7 @@ export function TabContainer({
         class="tab-content"
         aria-labelledby={activeTab}
       >
-        {tabContent[activeTab as keyof typeof tabContent]}
+        {renderContent()}
       </div>
     </div>
   );

@@ -14,65 +14,59 @@ export function DragDropList({
   useEffect(() => {
     if (!listARef.current || !listBRef.current) return;
 
-    const sortableA = Sortable.create(listARef.current, {
-      group: "shared",
-      animation: 150,
-      dragClass: "dragging",
-      ghostClass: "ghost",
-      chosenClass: "chosen",
-      dataIdAttr: "data-item-id",
+    const createSortable = (
+      element: HTMLElement,
+      currentList: Item[],
+      otherList: Item[],
+      onCurrentChange: (items: Item[]) => void,
+      onOtherChange: (items: Item[]) => void
+    ) => {
+      return Sortable.create(element, {
+        group: "shared",
+        animation: 150,
+        dragClass: "dragging",
+        ghostClass: "ghost",
+        chosenClass: "chosen",
+        dataIdAttr: "data-item-id",
 
-      onEnd: (evt) => {
-        if (evt.oldIndex === undefined || evt.newIndex === undefined) return;
+        onEnd: (evt) => {
+          if (evt.oldIndex === undefined || evt.newIndex === undefined) return;
 
-        const newListA = [...listA];
-        const newListB = [...listB];
+          const newCurrentList = [...currentList];
+          const newOtherList = [...otherList];
 
-        if (evt.from === evt.to && evt.from === listARef.current) {
-          const [removed] = newListA.splice(evt.oldIndex, 1);
-          newListA.splice(evt.newIndex, 0, removed);
-          onListAChange(newListA);
-        } else if (
-          evt.from === listARef.current &&
-          evt.to === listBRef.current
-        ) {
-          const [removed] = newListA.splice(evt.oldIndex, 1);
-          newListB.splice(evt.newIndex, 0, removed);
-          onListAChange(newListA);
-          onListBChange(newListB);
-        }
-      },
-    });
+          // Moving within the same list
+          if (evt.from === evt.to) {
+            const [removed] = newCurrentList.splice(evt.oldIndex, 1);
+            newCurrentList.splice(evt.newIndex, 0, removed);
+            onCurrentChange(newCurrentList);
+          } 
+          // Moving to the other list
+          else {
+            const [removed] = newCurrentList.splice(evt.oldIndex, 1);
+            newOtherList.splice(evt.newIndex, 0, removed);
+            onCurrentChange(newCurrentList);
+            onOtherChange(newOtherList);
+          }
+        },
+      });
+    };
 
-    const sortableB = Sortable.create(listBRef.current, {
-      group: "shared",
-      animation: 150,
-      dragClass: "dragging",
-      ghostClass: "ghost",
-      chosenClass: "chosen",
-      dataIdAttr: "data-item-id",
+    const sortableA = createSortable(
+      listARef.current,
+      listA,
+      listB,
+      onListAChange,
+      onListBChange
+    );
 
-      onEnd: (evt) => {
-        if (evt.oldIndex === undefined || evt.newIndex === undefined) return;
-
-        const newListA = [...listA];
-        const newListB = [...listB];
-
-        if (evt.from === evt.to && evt.from === listBRef.current) {
-          const [removed] = newListB.splice(evt.oldIndex, 1);
-          newListB.splice(evt.newIndex, 0, removed);
-          onListBChange(newListB);
-        } else if (
-          evt.from === listBRef.current &&
-          evt.to === listARef.current
-        ) {
-          const [removed] = newListB.splice(evt.oldIndex, 1);
-          newListA.splice(evt.newIndex, 0, removed);
-          onListAChange(newListA);
-          onListBChange(newListB);
-        }
-      },
-    });
+    const sortableB = createSortable(
+      listBRef.current,
+      listB,
+      listA,
+      onListBChange,
+      onListAChange
+    );
 
     return () => {
       sortableA.destroy();
@@ -81,6 +75,7 @@ export function DragDropList({
   }, [listA, listB, onListAChange, onListBChange]);
 
   const renderDragItem = (item: Item, index: number, listType: "a" | "b") => {
+    // CHALLENGE: These attributes are conditionally applied to test robust locators
     const hasTestId = index % 2 === 0;
     const hasIdAttribute = index % 3 === 0;
 
@@ -107,8 +102,8 @@ export function DragDropList({
     <div class="drag-drop-container">
       <div class="drag-list-wrapper">
         <h3 class="drag-list-header" id="list-a-header">
-          List A
-          <span aria-label="List A item count"> ({listA.length} items)</span>
+          Pending Orders
+          <span aria-label="List A item count"> ({listA.length})</span>
         </h3>
         <div
           ref={listARef}
@@ -124,9 +119,9 @@ export function DragDropList({
 
       <div class="drag-list-wrapper">
         <h3 class="drag-list-header" id="list-b-header">
-          List B
+          Processed Orders
           <span>
-            <span> ({listB.length} items)</span>
+            <span> ({listB.length})</span>
           </span>
         </h3>
         <div

@@ -2,6 +2,11 @@ export interface Item {
   id: string;
   text: string;
   value: number;
+  // Realistic Data Fields
+  customer?: string;
+  email?: string;
+  status?: "Pending" | "Shipped" | "Delivered" | "Cancelled";
+  amount?: string;
 }
 
 export interface ListProps {
